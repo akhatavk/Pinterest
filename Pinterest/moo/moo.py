@@ -17,7 +17,7 @@ import json
 
 
 # bottle framework
-from bottle import request, response, route, run, template
+from bottle import request, response, route, run, template,debug
 from data.user import User
 
 # moo
@@ -106,20 +106,28 @@ def add():
 # example adding data using forms
 #
 @route('/v1/reg', method='POST')
-def register():
-    print '---> moo.add'
-
-    # example list form values
-    for k, v in request.forms.allitems():
-        print "form:", k, "=", v
-    name = request.forms.get('name')
-    username = request.forms.get('username')
-    password = request.forms.get('password')
-    print name + ' ' + username + ' ' + password + ' ' + 'from form'
-    user1=User()
-    print 'User1 object created'
-    user1.create_user(username, name, password)
-    return None
+def register(): 
+   try:
+       data=request.body.read()
+       if not data:
+           return errorResponse(400, 'No data received')
+      
+       post_data=json.loads(data)
+     
+       username=post_data['username']
+       password=post_data['password']
+       name=post_data['name'] 
+    
+       user1=User()
+       token=user1.create_user(username, name, password)
+       if not token:
+           return errorResponse(400,{'success': False, 'message':'Username already exists'})
+       else:
+           response.status=201
+           return encodeResponsetoJSON({'success': True, 'message':'Created' ,'token':token }) 
+   except (RuntimeError, ValueError, TypeError, KeyError) as err:
+        print str(err)
+        return errorResponse(500, 'Internal Server Error')
 
 #
 # Determine the format to return data (does not support images)
@@ -164,6 +172,19 @@ def __response_format(reqfmt):
       else:
          return "*/*"
          
+
+def encodeResponsetoJSON(data):
+    return data  
+
+def errorResponse(code, message):
+    response.status = code
+    err = {}
+    err['error'] = message
+    return encodeResponsetoJSON(err)
+
+
+debug(True)
+
       # TODO
       # xml: application/xhtml+xml, application/xml
       # image types: image/jpeg, etc
