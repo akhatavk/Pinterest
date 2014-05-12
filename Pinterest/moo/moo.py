@@ -108,16 +108,19 @@ def add():
 @route('/v1/reg', method='POST')
 def register(): 
    try:
+      '''Get data from the request payload'''
        data=request.body.read()
        if not data:
            return errorResponse(400, 'No data received')
       
+      '''Create a dictonary from the json data'''
        post_data=json.loads(data)
      
        username=post_data['username']
        password=post_data['password']
        name=post_data['name'] 
     
+      '''Call the couchdb interface accessible from User Object'''
        user1=User()
        token=user1.create_user(username, name, password)
        if not token:
