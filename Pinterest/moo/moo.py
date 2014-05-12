@@ -107,20 +107,23 @@ def add():
 #
 @route('/v1/reg', method='POST')
 def register(): 
-   try:
-      '''Get data from the request payload'''
+  try:
+      #Get data from the request payload
+      
        data=request.body.read()
        if not data:
            return errorResponse(400, 'No data received')
       
-      '''Create a dictonary from the json data'''
+       #Create a dictonary from the json data
+      
        post_data=json.loads(data)
      
        username=post_data['username']
        password=post_data['password']
        name=post_data['name'] 
     
-      '''Call the couchdb interface accessible from User Object'''
+      #Call the couchdb interface accessible from User Object
+      
        user1=User()
        token=user1.create_user(username, name, password)
        if not token:
@@ -128,9 +131,68 @@ def register():
        else:
            response.status=201
            return encodeResponsetoJSON({'success': True, 'message':'Created' ,'token':token }) 
-   except (RuntimeError, ValueError, TypeError, KeyError) as err:
+  except (RuntimeError, ValueError, TypeError, KeyError) as err:
         print str(err)
         return errorResponse(500, 'Internal Server Error')
+    
+    
+    
+@route('/v1/login', method='POST')
+def login(): 
+   try:
+       #Get data from the request payload
+       data=request.body.read()
+       if not data:
+           return errorResponse(400, 'No data received')
+      
+      #Create a dictonary from the json data
+       post_data=json.loads(data)
+     
+       username=post_data['username']
+       password=post_data['password']
+           
+      #Call the couchdb interface accessible from User Object'''
+       user1=User()
+       token=user1.auth_user(username,password)
+       if not token:
+           return errorResponse(400,{'success': False, 'message':'Incorrect username and password'})
+       else:
+           response.status=200
+           return encodeResponsetoJSON({'success': True, 'message':'Successfully logged in' ,'token':token }) 
+   except (RuntimeError, ValueError, TypeError, KeyError) as err:
+        print str(err)
+        return errorResponse(500, 'Internal Server Error')  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 #
 # Determine the format to return data (does not support images)

@@ -46,9 +46,17 @@ class User(Document):
              user.store(db)
              return user_name
           else:
-             print 'Error'
              return None
             
+      def auth_user(self,user_name,password):
+          if user_name not in db:
+              return None
+          else:
+              user = User.load(db, user_name)
+              if user.password==password:
+                 return user_name
+              else:
+                 return None 
           
            
 '''
