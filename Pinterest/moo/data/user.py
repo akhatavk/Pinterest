@@ -10,9 +10,9 @@ from couchdb.mapping import Document, TextField, IntegerField, DateTimeField,Lis
 import couchdb
 try:
     server = Server()
-    db = server.create('user')
+    user_db = server.create('user')
 except couchdb.PreconditionFailed:
-    db = server['user']    
+    user_db = server['user']    
 
 class User(Document):
       user_name = TextField()
@@ -21,45 +21,50 @@ class User(Document):
      
       name = TextField()
      
-      boards=ListField(DictField(Mapping.build(
+      boards=ListField(dict(Mapping.build(
          board_id = TextField(),
-         
-         board_name = TextField(),
-         
-         pins=ListField(DictField(Mapping.build(
-         pin_id = TextField(),
-         pin_name = TextField(),
-         pin_url=TextField(),
-         comments=ListField(DictField(Mapping.build(
-         creator = TextField(),
-         comment_text = TextField()
-     )))
-     )))
-         
+         board_name=TextField()        
      )))
  
 
       def create_user(self,user_name,name,password):
           print 'IN Create User'
-          if user_name not in db:
+          if user_name not in user_db:
              user=User(id=user_name,user_name=user_name,name=name,password=password)
-             user.store(db)
+             user.store(user_db)
              return user_name
           else:
              return None
             
       def auth_user(self,user_name,password):
-          if user_name not in db:
+          if user_name not in user_db:
               return None
           else:
-              user = User.load(db, user_name)
+              user = User.load(user_db, user_name)
               if user.password==password:
                  return user_name
               else:
-                 return None 
+                 return None
+              
+      def getBoards(self,user_name):
+          user = User.load(user_db, user_name)
+          return user.boards         
+      
+      def verify_token(self,token):
+          if token in user_db:
+              return token
+          else:
+             return None  
+         
+      def dupCheckBoard(self,user_id,board_name):
+          user = User.load(user_db,user_id)
+          if search(user.boards,'board_name',board_name):
+             return False
+          else:
+             return True 
           
            
-'''
+'''board_name
 returns a dictonary object in the list where 
 attribute_name is the attribute name of dictonary and 
 searh_value is the value to search for for that attribute 

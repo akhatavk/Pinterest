@@ -19,6 +19,7 @@ import json
 # bottle framework
 from bottle import request, response, route, run, template,debug
 from data.user import User
+from data.board import Board
 
 # moo
 from classroom import Room
@@ -30,6 +31,10 @@ def setup(base, conf_fn):
     print '\n**** service initialization ****\n'
     global room 
     room = Room(base, conf_fn)
+    global user
+    user=User()
+    global board
+    board=Board()
 
 #
 # setup the configuration for our service
@@ -124,8 +129,8 @@ def register():
     
       #Call the couchdb interface accessible from User Object
       
-       user1=User()
-       token=user1.create_user(username, name, password)
+       
+       token=user.create_user(username, name, password)
        if not token:
            return errorResponse(400,{'success': False, 'message':'Username already exists'})
        else:
@@ -152,8 +157,8 @@ def login():
        password=post_data['password']
            
       #Call the couchdb interface accessible from User Object'''
-       user1=User()
-       token=user1.auth_user(username,password)
+       
+       token=user.auth_user(username,password)
        if not token:
            return errorResponse(400,{'success': False, 'message':'Incorrect username and password'})
        else:
@@ -161,38 +166,52 @@ def login():
            return encodeResponsetoJSON({'success': True, 'message':'Successfully logged in' ,'token':token }) 
    except (RuntimeError, ValueError, TypeError, KeyError) as err:
         print str(err)
-        return errorResponse(500, 'Internal Server Error')  
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        return errorResponse(500, 'Internal Server Error')      
+
+
+
+
+@route('/v1/user/:user_id/board', method='POST')
+def createBoard(user_id):
+    try:
+       #Get data from the request payload
+       data=request.body.read()
+       if not data:
+           return errorResponse(400, 'No data received')
+      
+      #Create a dictonary from the json data
+       post_data=json.loads(data)
+     
+       board_name=post_data['boardname']
+           
+      #Call the couchdb interface accessible from User Object'''
+       #verify token
+       token=user.verify_token(user_id)
+       if not token:
+           return errorResponse(400,{'success': False, 'message':'Incorrect User id or token expired.Please login again'})
+       else:
+            #verify whether board name already exist
+            if not user.dupCheckBoard(user_id,board_name): 
+               return errorResponse(400,{'success': False, 'message':'Board '+board_name+' already exists'})
+            else:
+                board.create_board(board_name, user_id)
+                
+    except (RuntimeError, ValueError, TypeError, KeyError) as err:
+        print str(err)
+        return errorResponse(500, 'Internal Server Error')      
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #
 # Determine the format to return data (does not support images)
