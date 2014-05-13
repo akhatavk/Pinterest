@@ -194,15 +194,56 @@ def createBoard(user_id):
             if not user.dupCheckBoard(user_id,board_name): 
                return errorResponse(400,{'success': False, 'message':'Board '+board_name+' already exists'})
             else:
-                board.create_board(board_name, user_id)
-                
+                board_id=board.create_board(board_name, user_id)
+                print 'adding board'
+                user.addBoard(user_id,board_id,board_name)
+                response.status=201
+                return encodeResponsetoJSON({'success': True, 'message':'Board created' ,'board_id':board_id }) 
+    
     except (RuntimeError, ValueError, TypeError, KeyError) as err:
         print str(err)
-        return errorResponse(500, 'Internal Server Error')      
+        return errorResponse(500, 'Internal Server Error')  
+    
+    
+ 
+@route('/v1/user/:user_id/board/:board_id', method='DELETE')
+def deleteBoard(user_id,board_id):
+    try:
+       print user_id
+       print board_id         
+      #Call the couchdb interface accessible from User Object'''
+       #verify token
+       token=user.verify_token(user_id)
+       if not token:
+           return errorResponse(400,{'success': False, 'message':'Incorrect User id or token expired.Please login again'})
+       else:
+            #verify whether board id exist
+            if not user.deleteBoard(user_id,board_id): 
+               return errorResponse(400,{'success': False, 'message':'Board with id '+board_id+' does not exist'})
+            else:
+                print 'In delete board'
+                board.delete_board(board_id)
+                print 'deleting board'
+               # user.addBoard(user_id,board_id,board_name)
+                response.status=200
+                return encodeResponsetoJSON({'success': True, 'message':'Board deleted' ,'board_id':board_id }) 
+    
+    except (RuntimeError, ValueError, TypeError, KeyError) as err:
+        print str(err)
+        return errorResponse(500, 'Internal Server Error')  
 
-
-
-
+@route('/v1/boards', method='GET')
+def getBoards():
+    try:   
+         board_list=board.getAllBoards()   
+         if not board_list:
+               return errorResponse(400,{'success': False, 'message':'No Boards found'})
+         else:
+             response.status=200
+             return encodeResponsetoJSON({'success': True, 'message':'Success' ,'boards':board_list })                             
+    except (RuntimeError, ValueError, TypeError, KeyError) as err:
+        print str(err)
+        return errorResponse(500, 'Internal Server Error')  
 
 
 

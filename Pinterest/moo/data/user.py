@@ -21,7 +21,7 @@ class User(Document):
      
       name = TextField()
      
-      boards=ListField(dict(Mapping.build(
+      boards=ListField(DictField(Mapping.build(
          board_id = TextField(),
          board_name=TextField()        
      )))
@@ -62,15 +62,32 @@ class User(Document):
              return False
           else:
              return True 
-          
-           
+      
+      def addBoard(self,user_id,board_id,board_name):
+          print 'In Add Board'
+          user = User.load(user_db,user_id)
+          user.boards.append({'board_id':board_id,'board_name':board_name}) 
+          user.store(user_db)   
+        
+      def deleteBoard(self,user_id,board_id):
+          user = User.load(user_db,user_id)
+          length=len(user.boards)
+          user.boards[:] = [d for d in user.boards if d.get('board_id') !=board_id]
+          if length==len(user.boards):
+               return None
+          else: 
+               return user.store(user_db)
+               
 '''board_name
 returns a dictonary object in the list where 
 attribute_name is the attribute name of dictonary and 
 searh_value is the value to search for for that attribute 
 '''
-def search(list_name,attribute_name,search_value):
-    return (element for element in list_name if element[attribute_name] == search_value).next()
+def search(list_name,attribute_name,search_value): 
+   try:   
+          return (element for element in list_name if element[attribute_name] == search_value).next()
+   except StopIteration:
+          return None 
 
 
 

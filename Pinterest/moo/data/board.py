@@ -28,10 +28,20 @@ class Board(Document):
          )))
          )))
          
- 
-         def create_board(self,board_name,user_name):
-             pass
-                           
+
+         def create_board(self,board_name,user_name):            
+             board=Board(board_name=board_name) 
+             board.store(board_db)
+             return board.id
+         
+         def delete_board(self,board_id):
+             del board_db[board_id] 
+        
+         def getAllBoards(self):
+             board_list=[]
+             for id in board_db:
+                 board_list.append({'board_id':id,'board_name':board_db[id].get('board_name')})           
+             return board_list           
    
             
           
